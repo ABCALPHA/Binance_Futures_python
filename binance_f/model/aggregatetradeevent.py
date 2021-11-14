@@ -26,3 +26,8 @@ class AggregateTradeEvent:
         result.time = json_wrapper.get_int("T")
         result.isBuyerMaker = json_wrapper.get_boolean("m")
         return result
+    
+    @staticmethod
+    def to_json_wrapper(json_wrapper):
+        return json_wrapper
+    
