@@ -3,6 +3,7 @@ class AggregateTradeEvent:
     def __init__(self):
         self.eventType = ""
         self.eventTime = 0
+        self.transactionTime = 0
         self.symbol = ""
         self.id = None
         self.price = 0.0
@@ -24,6 +25,7 @@ class AggregateTradeEvent:
         result.firstId = json_wrapper.get_int("f")
         result.lastId = json_wrapper.get_int("l")
         result.time = json_wrapper.get_int("T")
+        result.transactionTime = json_wrapper.get_int("T")
         result.isBuyerMaker = json_wrapper.get_boolean("m")
         return result
     
