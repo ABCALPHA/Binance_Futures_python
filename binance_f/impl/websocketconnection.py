@@ -46,7 +46,7 @@ class ConnectionState:
     IDLE = 0
     CONNECTED = 1
     CLOSED_ON_ERROR = 2
-
+    CLOSED_ON_NO_RESPONSE = 3
 
 def websocket_func(*args):
     connection_instance = args[0]
@@ -201,3 +201,9 @@ class WebsocketConnection:
             self.ws.close()
             self.state = ConnectionState.CLOSED_ON_ERROR
             self.logger.error("[Sub][" + str(self.id) + "] Connection is closing due to error")
+            
+    def close_on_no_response(self):
+        if self.ws is not None:
+            self.ws.close()
+            self.state = ConnectionState.CLOSED_ON_NO_RESPONSE
+            self.logger.error("[Sub][" + str(self.id) + "] Connection is closing due to no response")

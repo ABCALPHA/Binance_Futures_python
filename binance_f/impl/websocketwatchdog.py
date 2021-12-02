@@ -8,18 +8,19 @@ from binance_f.impl.utils.timeservice import get_current_timestamp
 def watch_dog_job(*args):
     watch_dog_instance = args[0]
     for connection in watch_dog_instance.connection_list:
-        if connection.in_delay_connection():
-            watch_dog_instance.logger.warning("[Sub] call re_connect")
-            connection.re_connect()
-            pass
-        
-        elif connection.state == ConnectionState.CONNECTED:
+        if connection.state == ConnectionState.CONNECTED:
             if watch_dog_instance.is_auto_connect:
                 ts = get_current_timestamp() - connection.last_receive_time
                 if ts > watch_dog_instance.receive_limit_ms:
                     watch_dog_instance.logger.warning("[Sub][" + str(connection.id) + "] No response from server")
                     connection.re_connect_in_delay(watch_dog_instance.connection_delay_failure)
-       
+                    connection.close_on_no_response()
+
+        elif connection.in_delay_connection():
+            watch_dog_instance.logger.warning("[Sub] call re_connect")
+            connection.re_connect()
+            pass
+        
         elif connection.state == ConnectionState.CLOSED_ON_ERROR:
             if watch_dog_instance.is_auto_connect:
                 connection.re_connect_in_delay(watch_dog_instance.connection_delay_failure)
