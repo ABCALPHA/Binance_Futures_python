@@ -31,7 +31,7 @@ def on_error(ws, error):
 
 def on_close(ws):
     websocket_connection = websocket_connection_handler[ws]
-    websocket_connection.on_close()
+    websocket_connection.close()
 
 
 def on_open(ws):
@@ -129,15 +129,15 @@ class WebsocketConnection:
 
     def on_error(self, error_message):
         if self.request.error_handler is not None:
-            print('error')
+            self.logger.error('error')
             exception = BinanceApiException(BinanceApiException.SUBSCRIPTION_ERROR, error_message)
             self.request.error_handler(exception)
         self.logger.error("[Sub][" + str(self.id) + "] " + str(error_message))
 
     def on_failure(self, error):
-        print('on_failure')
         self.on_error("Unexpected error: " + str(error))
         self.close_on_error()
+        
 
     def on_message(self, message):
         self.last_receive_time = get_current_timestamp()
