@@ -149,7 +149,10 @@ class WebsocketConnection:
         self.logger.error("[Sub][" + str(self.id) + "] " + str(error_message))
 
     def on_failure(self, error):
-        self.on_error("Unexpected error: " + str(error))
+        self.on_error(
+            "Unexpected error on {symbol}: ".format(symbol=self.request.symbol)
+            + str(error)
+        )
         self.close_on_error()
 
     def on_message(self, message):
@@ -162,14 +165,14 @@ class WebsocketConnection:
         ):
             error_code = json_wrapper.get_string_or_default("err-code", "Unknown error")
             error_msg = json_wrapper.get_string_or_default("err-msg", "Unknown error")
-            self.on_error(error_code + ": " + error_msg)
+            self.on_error(error_code + f" on {self.request.symbol}: " + error_msg)
         elif (
             json_wrapper.contain_key("err-code")
             and json_wrapper.get_int("err-code") != 0
         ):
             error_code = json_wrapper.get_string_or_default("err-code", "Unknown error")
             error_msg = json_wrapper.get_string_or_default("err-msg", "Unknown error")
-            self.on_error(error_code + ": " + error_msg)
+            self.on_error(error_code + f" on {self.request.symbol}: " + error_msg)
         elif json_wrapper.contain_key("result") and json_wrapper.contain_key("id"):
             self.__on_receive_response(json_wrapper)
         else:
@@ -180,14 +183,16 @@ class WebsocketConnection:
         try:
             res = json_wrapper.get_int("id")
         except Exception as e:
-            self.on_error("Failed to parse server's response: " + str(e))
+            self.on_error(
+                f"Failed to parse server's response on {self.request.symbol}: " + str(e)
+            )
 
         try:
             if self.request.update_callback is not None:
                 self.request.update_callback(SubscribeMessageType.RESPONSE, res)
         except Exception as e:
             self.on_error(
-                "Process error: "
+                f"Process error on {self.request.symbol}: "
                 + str(e)
                 + " You should capture the exception in your error handler"
             )
@@ -198,14 +203,16 @@ class WebsocketConnection:
             if self.request.json_parser is not None:
                 res = self.request.json_parser(json_wrapper)
         except Exception as e:
-            self.on_error("Failed to parse server's response: " + str(e))
+            self.on_error(
+                f"Failed to parse server's response on {self.request.symbol}: " + str(e)
+            )
 
         try:
             if self.request.update_callback is not None:
                 self.request.update_callback(SubscribeMessageType.PAYLOAD, res)
         except Exception as e:
             self.on_error(
-                "Process error: "
+                f"Process error on {self.request.symbol}: "
                 + str(e)
                 + " You should capture the exception in your error handler"
             )
