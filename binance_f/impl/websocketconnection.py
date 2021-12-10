@@ -14,6 +14,7 @@ from binance_f.exception.binanceapiexception import BinanceApiException
 from binance_f.impl.utils import *
 from binance_f.base.printobject import *
 from binance_f.model.constant import *
+
 # Key: ws, Value: connection
 websocket_connection_handler = dict()
 
@@ -29,7 +30,7 @@ def on_error(ws, error):
     websocket_connection.on_failure(error)
 
 
-def on_close(ws):
+def on_close(ws, *args):
     websocket_connection = websocket_connection_handler[ws]
     websocket_connection.close()
 
@@ -48,25 +49,31 @@ class ConnectionState:
     CLOSED_ON_ERROR = 2
     CLOSED_ON_NO_RESPONSE = 3
 
+
 def websocket_func(*args):
     connection_instance = args[0]
-    connection_instance.ws = websocket.WebSocketApp(connection_instance.url,
-                                                    on_message=on_message,
-                                                    on_error=on_error,
-                                                    on_close=on_close)
+    connection_instance.ws = websocket.WebSocketApp(
+        connection_instance.url,
+        on_message=on_message,
+        on_error=on_error,
+        on_close=on_close,
+    )
     global websocket_connection_handler
     websocket_connection_handler[connection_instance.ws] = connection_instance
-    connection_instance.logger.info("[Sub][" + str(connection_instance.id) + "] Connecting...")
+    connection_instance.logger.info(
+        "[Sub][" + str(connection_instance.id) + "] Connecting..."
+    )
     connection_instance.delay_in_second = -1
     connection_instance.ws.on_open = on_open
     connection_instance.ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
-    connection_instance.logger.info("[Sub][" + str(connection_instance.id) + "] Connection event loop down")
+    connection_instance.logger.info(
+        "[Sub][" + str(connection_instance.id) + "] Connection event loop down"
+    )
     if connection_instance.state == ConnectionState.CONNECTED:
         connection_instance.state = ConnectionState.IDLE
 
 
 class WebsocketConnection:
-
     def __init__(self, api_key, secret_key, uri, watch_dog, request):
         self.__thread = None
         self.url = uri
@@ -91,8 +98,13 @@ class WebsocketConnection:
             self.ws.close()
             self.ws = None
         self.delay_in_second = delay_in_second
-        self.logger.warning("[Sub][" + str(self.id) + "] Reconnecting after "
-                            + str(self.delay_in_second) + " seconds later")
+        self.logger.warning(
+            "[Sub]["
+            + str(self.id)
+            + "] Reconnecting after "
+            + str(self.delay_in_second)
+            + " seconds later"
+        )
 
     def re_connect(self):
         if self.delay_in_second != 0:
@@ -129,25 +141,32 @@ class WebsocketConnection:
 
     def on_error(self, error_message):
         if self.request.error_handler is not None:
-            self.logger.error('error')
-            exception = BinanceApiException(BinanceApiException.SUBSCRIPTION_ERROR, error_message)
+            self.logger.error("error")
+            exception = BinanceApiException(
+                BinanceApiException.SUBSCRIPTION_ERROR, error_message
+            )
             self.request.error_handler(exception)
         self.logger.error("[Sub][" + str(self.id) + "] " + str(error_message))
 
     def on_failure(self, error):
         self.on_error("Unexpected error: " + str(error))
         self.close_on_error()
-        
 
     def on_message(self, message):
         self.last_receive_time = get_current_timestamp()
         json_wrapper = parse_json_from_string(message)
 
-        if json_wrapper.contain_key("status") and json_wrapper.get_string("status") != "ok":
+        if (
+            json_wrapper.contain_key("status")
+            and json_wrapper.get_string("status") != "ok"
+        ):
             error_code = json_wrapper.get_string_or_default("err-code", "Unknown error")
             error_msg = json_wrapper.get_string_or_default("err-msg", "Unknown error")
             self.on_error(error_code + ": " + error_msg)
-        elif json_wrapper.contain_key("err-code") and json_wrapper.get_int("err-code") != 0:
+        elif (
+            json_wrapper.contain_key("err-code")
+            and json_wrapper.get_int("err-code") != 0
+        ):
             error_code = json_wrapper.get_string_or_default("err-code", "Unknown error")
             error_msg = json_wrapper.get_string_or_default("err-msg", "Unknown error")
             self.on_error(error_code + ": " + error_msg)
@@ -167,8 +186,11 @@ class WebsocketConnection:
             if self.request.update_callback is not None:
                 self.request.update_callback(SubscribeMessageType.RESPONSE, res)
         except Exception as e:
-            self.on_error("Process error: " + str(e)
-                     + " You should capture the exception in your error handler")
+            self.on_error(
+                "Process error: "
+                + str(e)
+                + " You should capture the exception in your error handler"
+            )
 
     def __on_receive_payload(self, json_wrapper):
         res = None
@@ -182,28 +204,35 @@ class WebsocketConnection:
             if self.request.update_callback is not None:
                 self.request.update_callback(SubscribeMessageType.PAYLOAD, res)
         except Exception as e:
-            self.on_error("Process error: " + str(e)
-                     + " You should capture the exception in your error handler")
+            self.on_error(
+                "Process error: "
+                + str(e)
+                + " You should capture the exception in your error handler"
+            )
 
         if self.request.auto_close:
             self.close()
 
     def __process_ping_on_trading_line(self, ping_ts):
-        self.send("{\"op\":\"pong\",\"ts\":" + str(ping_ts) + "}")
+        self.send('{"op":"pong","ts":' + str(ping_ts) + "}")
         return
 
     def __process_ping_on_market_line(self, ping_ts):
-        self.send("{\"pong\":" + str(ping_ts) + "}")
+        self.send('{"pong":' + str(ping_ts) + "}")
         return
 
     def close_on_error(self):
         if self.ws is not None:
             self.ws.close()
             self.state = ConnectionState.CLOSED_ON_ERROR
-            self.logger.error("[Sub][" + str(self.id) + "] Connection is closing due to error")
-            
+            self.logger.error(
+                "[Sub][" + str(self.id) + "] Connection is closing due to error"
+            )
+
     def close_on_no_response(self):
         if self.ws is not None:
             self.ws.close()
             self.state = ConnectionState.CLOSED_ON_NO_RESPONSE
-            self.logger.error("[Sub][" + str(self.id) + "] Connection is closing due to no response")
+            self.logger.error(
+                "[Sub][" + str(self.id) + "] Connection is closing due to no response"
+            )
