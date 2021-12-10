@@ -205,6 +205,7 @@ class WebsocketRequestImpl(object):
         request.json_parser = json_parse
         request.update_callback = callback
         request.error_handler = error_handler
+        request.symbol = symbol
 
         return request
 
@@ -286,6 +287,7 @@ class WebsocketRequestImpl(object):
         request.json_parser = json_parse
         request.update_callback = callback
         request.error_handler = error_handler
+        request.symbol = symbol
 
         return request
 
@@ -308,6 +310,7 @@ class WebsocketRequestImpl(object):
         request.json_parser = json_parse
         request.update_callback = callback
         request.error_handler = error_handler
+        request.symbol = symbol
 
         return request
 
