@@ -1,5 +1,4 @@
 class RateLimit:
-
     def __init__(self):
         self.rateLimitType = ""
         self.interval = ""
@@ -8,16 +7,16 @@ class RateLimit:
 
 
 class ExchangeFilter:
-
     def __init__(self):
         self.filterType = ""
         self.maxOrders = 0
 
 
 class Symbol:
-
     def __init__(self):
         self.symbol = ""
+        self.status = ""
+        self.contractType = ""
         self.status = ""
         self.maintMarginPercent = 0.0
         self.requiredMarginPercent = 0.0
@@ -32,10 +31,7 @@ class Symbol:
         self.filters = list()
 
 
-
-
 class ExchangeInformation:
-
     def __init__(self):
         self.timezone = ""
         self.serverTime = 0
@@ -68,7 +64,7 @@ class ExchangeInformation:
             element.filterType = item.get_string("filterType")
             if element.filterType == "EXCHANGE_MAX_NUM_ORDERS":
                 element.maxNumOrders = item.get_int("maxNumOrders")
-            elif  element.filterType == "EXCHANGE_MAX_ALGO_ORDERS":
+            elif element.filterType == "EXCHANGE_MAX_ALGO_ORDERS":
                 element.maxNumAlgoOrders = item.get_int("maxNumAlgoOrders")
 
             element_list.append(element)
@@ -101,4 +97,3 @@ class ExchangeInformation:
         result.symbols = element_list
 
         return result
-
