@@ -76,6 +76,7 @@ class ExchangeInformation:
             element = Symbol()
             element.symbol = item.get_string("symbol")
             element.status = item.get_string("status")
+            element.contractType = item.get_string("contractType")
             element.maintMarginPercent = item.get_float("maintMarginPercent")
             element.requiredMarginPercent = item.get_float("requiredMarginPercent")
             element.baseAsset = item.get_string("baseAsset")
